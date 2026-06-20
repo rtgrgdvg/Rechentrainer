@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rechentrainer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+:root {
+  --bg:#0e1117; --panel:#161b27; --border:#2a3550;
+  --accent:#00d4ff; --green:#00ff99; --red:#ff4466;
+  --yellow:#ffd166; --muted:#4a5a7a; --text:#c8d6f0;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px 60px;}
+header{text-align:center;margin-bottom:24px;}
+header h1{font-family:'VT323',monospace;font-size:3.4rem;letter-spacing:.25em;color:var(--accent);text-shadow:0 0 18px #00d4ff88;line-height:1;}
+header p{font-size:.78rem;color:var(--muted);letter-spacing:.18em;margin-top:4px;text-transform:uppercase;}
+
+/* name row */
+.name-wrap{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.name-wrap label{font-size:.78rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;}
+#schueler-name{font-family:'Share Tech Mono',monospace;font-size:.9rem;background:#0a0d14;border:1px solid var(--border);border-radius:4px;color:var(--text);padding:6px 12px;width:220px;outline:none;transition:border-color .15s;}
+#schueler-name:focus{border-color:var(--accent);}
+
+/* button bar */
+.btn-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.btn-io{padding:6px 14px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:border-color .15s,color .15s;}
+.btn-io:hover{border-color:var(--accent);color:var(--accent);}
+#laden-input{display:none;}
+
+/* toggle bars */
+.toggle-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;cursor:pointer;user-select:none;font-size:.8rem;color:var(--muted);letter-spacing:.1em;}
+.toggle-bar input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px;cursor:pointer;}
+.toggle-bar:hover{color:var(--accent);}
+
+/* sprach bar */
+.sprach-bar{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:14px;}
+.sprach-toggle{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--muted);letter-spacing:.1em;cursor:pointer;user-select:none;}
+.sprach-toggle:hover{color:var(--accent);}
+.sprach-toggle input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;}
+
+/* lern-optionen */
+.lern-bar{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:16px;padding:10px 14px;border:1px solid var(--border);border-radius:4px;background:#0a0d14;}
+.lern-bar label{font-size:.75rem;color:var(--muted);letter-spacing:.08em;display:flex;align-items:center;gap:7px;cursor:pointer;}
+.lern-bar input[type=checkbox]{accent-color:var(--yellow);width:13px;height:13px;}
+.lern-bar span{color:var(--yellow);}
+
+/* config panel */
+#config-panel{width:100%;max-width:820px;margin-bottom:20px;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+#config-panel table{width:100%;border-collapse:collapse;font-size:.78rem;}
+#config-panel thead tr{background:#1c2336;color:var(--accent);letter-spacing:.1em;font-size:.7rem;text-transform:uppercase;}
+#config-panel th,#config-panel td{padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;}
+#config-panel td:nth-child(2){text-align:left;}
+#config-panel tr:last-child td{border-bottom:none;}
+#config-panel tr:hover td{background:#1a2035;}
+#config-panel input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;}
+#config-panel input[type=number]{background:#0e1117;border:1px solid var(--border);border-radius:3px;color:var(--green);font-family:'Share Tech Mono',monospace;font-size:.75rem;width:52px;padding:3px 5px;text-align:center;}
+#config-panel input[type=number]:focus{outline:none;border-color:var(--accent);}
+#config-panel input[type=text]{background:#0e1117;border:1px solid var(--border);border-radius:3px;color:var(--yellow);font-family:'Share Tech Mono',monospace;font-size:.72rem;width:110px;padding:3px 5px;}
+#config-panel input[type=text]:focus{outline:none;border-color:var(--yellow);}
+#config-panel input[type=text]::placeholder{color:#2a3550;}
+.sep-row td{background:#131929;color:var(--yellow);font-size:.68rem;letter-spacing:.15em;padding:4px 10px;text-align:left!important;text-transform:uppercase;}
+
+/* start button */
+.btn-start{display:block;margin:0 auto 28px;padding:10px 48px;background:transparent;border:2px solid var(--accent);border-radius:4px;color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.95rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:background .15s,color .15s,box-shadow .15s;}
+.btn-start:hover{background:var(--accent);color:var(--bg);box-shadow:0 0 16px #00d4ff66;}
+
+/* training area */
+#training{width:100%;max-width:820px;display:flex;flex-direction:column;align-items:center;gap:16px;}
+.ausgabe-wrap{background:#0a0d14;border:1px solid var(--border);border-radius:4px;padding:10px 14px;}
+#ausgabe{font-family:'VT323',monospace;font-size:1.6rem;color:var(--green);white-space:pre;width:80ch;overflow:hidden;letter-spacing:.04em;line-height:1.2;text-shadow:0 0 8px #00ff9955;}
+.eingabe-wrap{display:flex;align-items:center;gap:12px;}
+.eingabe-label{font-size:.75rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;}
+#eingabe{font-family:'VT323',monospace;font-size:1.6rem;background:#0a0d14;border:1px solid var(--border);border-radius:4px;color:var(--yellow);padding:8px 12px;width:40ch;letter-spacing:.04em;outline:none;transition:border-color .15s;}
+#eingabe:focus{border-color:var(--accent);}
+#eingabe:disabled{color:var(--muted);}
+#btn-mic{background:transparent;border:1px solid var(--border);border-radius:50%;width:40px;height:40px;font-size:1.1rem;cursor:pointer;color:var(--muted);transition:border-color .15s,color .15s,background .15s;display:none;align-items:center;justify-content:center;}
+#btn-mic.sichtbar{display:flex;}
+#btn-mic.hoert{border-color:var(--red);color:var(--red);background:#ff446622;animation:puls 1s infinite;}
+@keyframes puls{0%,100%{box-shadow:0 0 0 0 #ff446644;}50%{box-shadow:0 0 0 6px #ff446600;}}
+#feedback{font-family:'VT323',monospace;font-size:1.8rem;letter-spacing:.1em;min-height:2.2rem;}
+#feedback.richtig{color:var(--green);text-shadow:0 0 10px #00ff9966;}
+#feedback.falsch{color:var(--red);text-shadow:0 0 10px #ff446655;}
+#stats{font-size:.78rem;color:var(--muted);letter-spacing:.1em;display:flex;gap:24px;}
+#stats span{color:var(--text);}
+
+/* debug panel */
+#debug-panel{width:100%;max-width:820px;margin-bottom:16px;background:#0a0d14;border:1px solid #ffd16644;border-radius:4px;padding:10px 14px;font-size:.7rem;color:var(--yellow);font-family:'Share Tech Mono',monospace;max-height:150px;overflow-y:auto;display:none;}
+#debug-panel.sichtbar{display:block;}
+.dbg-line{border-bottom:1px solid #1a2035;padding:2px 0;}
+.dbg-ok{color:var(--green);} .dbg-err{color:var(--red);} .dbg-info{color:var(--yellow);}
+#debug-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;border-bottom:1px solid #2a3550;padding-bottom:4px;}
+#debug-header span{color:var(--muted);font-size:.68rem;letter-spacing:.1em;}
+#btn-debug-copy{background:transparent;border:1px solid #2a3550;border-radius:3px;color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:.65rem;padding:2px 8px;cursor:pointer;}
+#btn-debug-copy:hover{border-color:var(--accent);color:var(--accent);}
+
+/* modals */
+.modal-overlay{display:none;position:fixed;inset:0;background:#000000cc;z-index:100;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto;}
+.modal-overlay.aktiv{display:flex;}
+.modal-box{background:#0e1117;border:1px solid var(--border);border-radius:6px;width:92%;max-width:900px;display:flex;flex-direction:column;max-height:85vh;}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);background:#1c2336;flex-shrink:0;}
+.modal-head h2{font-family:'VT323',monospace;font-size:1.5rem;color:var(--accent);letter-spacing:.15em;}
+.modal-btns{display:flex;gap:8px;}
+.modal-body{overflow-y:auto;padding:14px 18px;}
+
+/* result table */
+#result-table{width:100%;border-collapse:collapse;font-size:.75rem;}
+#result-table th{color:var(--accent);text-transform:uppercase;letter-spacing:.08em;font-size:.68rem;padding:5px 8px;border-bottom:1px solid var(--border);text-align:left;}
+#result-table td{padding:4px 8px;border-bottom:1px solid #1a2035;font-family:'Share Tech Mono',monospace;}
+#result-table tr.richtig td{color:#c8d6f0;}
+#result-table tr.falsch td{color:var(--red);}
+#result-summary{margin-top:10px;font-size:.75rem;color:var(--muted);}
+
+/* dashboard */
+.dash-section{margin-bottom:24px;}
+.dash-title{font-size:.72rem;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:12px;}
+
+/* progress bars */
+.prog-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:.72rem;}
+.prog-label{width:130px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prog-track{flex:1;height:12px;background:#1a2035;border-radius:6px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:6px;transition:width .4s;}
+.prog-pct{width:40px;text-align:right;color:var(--muted);}
+.prog-cnt{width:60px;text-align:right;color:var(--muted);font-size:.65rem;}
+
+/* heatmap */
+.heatmap-wrap{margin-bottom:18px;}
+.heatmap-title{font-size:.7rem;color:var(--yellow);letter-spacing:.1em;margin-bottom:6px;}
+.heatmap-grid{display:flex;flex-wrap:wrap;gap:3px;}
+.hm-cell{width:22px;height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:.55rem;color:#ffffff99;cursor:default;transition:transform .1s;}
+.hm-cell:hover{transform:scale(1.3);z-index:2;}
+.hm-neu{background:#1a2035;}
+.hm-richtig{background:#00994d;}
+.hm-falsch{background:#cc2244;}
+.hm-offen{background:#aa7700;}
+.hm-legend{display:flex;gap:14px;margin-top:6px;font-size:.62rem;color:var(--muted);}
+.hm-legend span{display:flex;align-items:center;gap:4px;}
+.hm-dot{width:10px;height:10px;border-radius:2px;display:inline-block;}
+
+/* fehlerkatalog list */
+.fk-list{font-size:.75rem;}
+.fk-item{display:flex;align-items:center;gap:12px;padding:5px 0;border-bottom:1px solid #1a2035;color:var(--text);}
+.fk-aufgabe{font-family:'VT323',monospace;font-size:1.1rem;color:var(--red);width:180px;}
+.fk-zaehler{color:var(--muted);font-size:.68rem;}
+.fk-empty{color:var(--muted);font-size:.75rem;padding:8px 0;}
+
+.hidden{display:none!important;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>RECHENTRAINER</h1>
+  <p>Mathematik-Trainer</p>
+</header>
+
+<!-- Name -->
+<div class="name-wrap">
+  <label for="schueler-name">Name:</label>
+  <input type="text" id="schueler-name" maxlength="40" placeholder="Name des Schülers">
+</div>
+
+<!-- Button Bar -->
+<div class="btn-bar">
+  <button class="btn-io" id="btn-speichern">💾 Konfiguration speichern</button>
+  <button class="btn-io" id="btn-laden">📂 Konfiguration laden</button>
+  <button class="btn-io" id="btn-log-speichern">📋 Log speichern</button>
+  <button class="btn-io" id="btn-result">📊 Ergebnisse</button>
+  <button class="btn-io" id="btn-dashboard">📈 Dashboard</button>
+  <input type="file" id="laden-input" accept=".json">
+  <input type="file" id="log-laden-input" accept=".csv">
+</div>
+
+<!-- Einstellungen Toggle -->
+<label class="toggle-bar">
+  <input type="checkbox" id="toggle-config" checked>
+  Einstellungen anzeigen
+</label>
+
+<!-- Sprache -->
+<div class="sprach-bar" id="sprach-bar">
+  <label class="sprach-toggle"><input type="checkbox" id="chk-tts"> 🔊 Aufgabe vorlesen</label>
+  <label class="sprach-toggle"><input type="checkbox" id="chk-stt"> 🎤 Antwort sprechen</label>
+  <label class="sprach-toggle"><input type="checkbox" id="chk-debug"> 🐛 Debug</label>
+</div>
+
+<!-- Lernoptionen -->
+<div class="lern-bar" id="lern-bar">
+  <label><input type="checkbox" id="chk-spaced" checked> <span>Spaced Repetition</span> — falsche Aufgaben öfter wiederholen</label>
+  <label><input type="checkbox" id="chk-fk" checked> <span>Fehlerkatalog</span> — fehlerhafte Aufgaben gezielt wiederholen</label>
+</div>
+
+<!-- Config Panel -->
+<div id="config-panel">
+  <table>
+    <thead>
+      <tr>
+        <th>Aktiv</th><th>Aufgabentyp</th>
+        <th>a&nbsp;von</th><th>a&nbsp;bis</th>
+        <th>b&nbsp;von</th><th>b&nbsp;bis</th>
+        <th title="Komma-getrennte Werte, z.B. 1,2,5,10 — überschreibt von/bis">a-Set</th>
+        <th title="Komma-getrennte Werte, z.B. 1,2,5,10 — überschreibt von/bis">b-Set</th>
+      </tr>
+    </thead>
+    <tbody id="config-body"></tbody>
+  </table>
+</div>
+
+<!-- Debug Panel -->
+<div id="debug-panel">
+  <div id="debug-header">
+    <span>DEBUG OUTPUT</span>
+    <button id="btn-debug-copy">📋 Kopieren</button>
+  </div>
+  <div id="debug-lines"></div>
+</div>
+
+<button class="btn-start" id="btn-start">▶ Training starten</button>
+
+<!-- Training -->
+<div id="training">
+  <div class="ausgabe-wrap">
+    <div id="ausgabe">Bereit zum Starten ...                                                          </div>
+  </div>
+  <div class="eingabe-wrap">
+    <span class="eingabe-label">Antwort:</span>
+    <input type="text" id="eingabe" maxlength="10" placeholder="?" disabled inputmode="numeric" pattern="[0-9]*">
+    <button id="btn-mic" title="Antwort sprechen">🎤</button>
+  </div>
+  <div id="feedback"></div>
+  <div id="stats" class="hidden">
+    Richtig: <span id="stat-r">0</span>
+    &nbsp;&nbsp;Falsch: <span id="stat-f">0</span>
+    &nbsp;&nbsp;Gesamt: <span id="stat-g">0</span>
+  </div>
+</div>
+
+<!-- Result Modal -->
+<div class="modal-overlay" id="result-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>📋 ERGEBNISSE</h2>
+      <div class="modal-btns">
+        <button class="btn-io" id="btn-csv">📥 CSV herunterladen</button>
+        <button class="btn-io" id="btn-result-close">✕ Schliessen</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <table id="result-table">
+        <thead><tr><th>Datum</th><th>Uhrzeit</th><th>Schüler</th><th>Aufgabe</th><th>Erwartet</th><th>Eingabe</th><th>Richtig</th></tr></thead>
+        <tbody id="result-tbody"></tbody>
+      </table>
+      <div id="result-summary"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard Modal -->
+<div class="modal-overlay" id="dash-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>📊 DASHBOARD</h2>
+      <div class="modal-btns">
+        <button class="btn-io" id="btn-dash-close">✕ Schliessen</button>
+      </div>
+    </div>
+    <div class="modal-body" id="dash-body"></div>
+  </div>
+</div>
+
+<script>
+// ── Aufgabentypen ─────────────────────────────────────────────────────────
+const TYPEN = [
+  {label:'a + b = ?', op:'+', frage:'c'},
+  {label:'a + ? = c', op:'+', frage:'b'},
+  {label:'? + b = c', op:'+', frage:'a'},
+  {label:'a - b = ?', op:'-', frage:'c'},
+  {label:'a - ? = c', op:'-', frage:'b'},
+  {label:'? - b = c', op:'-', frage:'a'},
+  {label:'a x b = ?', op:'x', frage:'c'},
+  {label:'a x ? = c', op:'x', frage:'b'},
+  {label:'? x b = c', op:'x', frage:'a'},
+  {label:'a : b = ?', op:':', frage:'c'},
+  {label:'a : ? = c', op:':', frage:'b'},
+  {label:'? : b = c', op:':', frage:'a'},
+];
+const DEFAULTS = {
+  '+':{aMin:1,aMax:20,bMin:1,bMax:20},
+  '-':{aMin:1,aMax:20,bMin:1,bMax:20},
+  'x':{aMin:1,aMax:10,bMin:1,bMax:10},
+  ':':{aMin:1,aMax:100,bMin:1,bMax:10},
+};
+// Vorausgefüllte Zahlen-Sets nach Lernstrategie 3
+const SET_DEFAULTS = {
+  '+':{aSet:'',bSet:''},
+  '-':{aSet:'',bSet:''},
+  'x':{aSet:'1,2,3,4,5,6,7,8,9,10',bSet:'1,2,5,10'},
+  ':':{aSet:'',bSet:'1,2,5,10'},
+};
+const TRENN = {0:'Addition',3:'Subtraktion',6:'Multiplikation',9:'Division'};
+
+// ── Zustand ───────────────────────────────────────────────────────────────
+let aktuelleAntwort = null;
+let aktuelleAufgabe = '';
+let aktuelleKey    = '';   // z.B. "0:5+3" für Fehlerkatalog
+let statR=0, statF=0;
+let protokoll=[];
+
+// Spaced Repetition: Gewichte pro Aufgabentyp-Index
+let srGewichte = TYPEN.map(()=>1);
+
+// Fehlerkatalog: { key -> {aufgabe, antwort, versuche, offen} }
+let fehlerkatalog = {};
+// Warteschlange für fällige FK-Aufgaben
+let fkQueue = [];
+
+// Aufgaben-Statistik für Dashboard: { key -> {richtig, falsch} }
+let aufgabenStats = {};
+
+// ── Config-Tabelle aufbauen ───────────────────────────────────────────────
+const tbody = document.getElementById('config-body');
+TYPEN.forEach((typ,i)=>{
+  if(TRENN[i]){
+    const sep=document.createElement('tr');sep.className='sep-row';
+    sep.innerHTML='<td colspan="8">'+TRENN[i]+'</td>';tbody.appendChild(sep);
+  }
+  const d=DEFAULTS[typ.op];
+  const s=SET_DEFAULTS[typ.op];
+  const tr=document.createElement('tr');tr.dataset.idx=i;
+  tr.innerHTML=
+    '<td><input type="checkbox" class="chk" data-idx="'+i+'" checked></td>'+
+    '<td>'+typ.label+'</td>'+
+    '<td><input type="number" class="aMin" data-idx="'+i+'" value="'+d.aMin+'" min="0" max="9999"></td>'+
+    '<td><input type="number" class="aMax" data-idx="'+i+'" value="'+d.aMax+'" min="0" max="9999"></td>'+
+    '<td><input type="number" class="bMin" data-idx="'+i+'" value="'+d.bMin+'" min="0" max="9999"></td>'+
+    '<td><input type="number" class="bMax" data-idx="'+i+'" value="'+d.bMax+'" min="0" max="9999"></td>'+
+    '<td><input type="text" class="aSet" data-idx="'+i+'" value="'+s.aSet+'" placeholder="z.B. 1,2,5,10"></td>'+
+    '<td><input type="text" class="bSet" data-idx="'+i+'" value="'+s.bSet+'" placeholder="z.B. 1,2,5,10"></td>';
+  tbody.appendChild(tr);
+});
+
+// ── Hilfsfunktionen ───────────────────────────────────────────────────────
+function parseSet(str){
+  // "1,2,5,10" → [1,2,5,10], leer → null
+  if(!str||!str.trim())return null;
+  return str.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>0);
+}
+function rndFromSet(set){return set[Math.floor(Math.random()*set.length)];}
+function pad80(s){return (s+'                                                                                ').substring(0,80);}
+function getConfig(idx){
+  return {
+    aktiv: document.querySelector('.chk[data-idx="'+idx+'"]').checked,
+    aMin:  parseInt(document.querySelector('tr[data-idx="'+idx+'"] .aMin').value)||1,
+    aMax:  parseInt(document.querySelector('tr[data-idx="'+idx+'"] .aMax').value)||20,
+    bMin:  parseInt(document.querySelector('tr[data-idx="'+idx+'"] .bMin').value)||1,
+    bMax:  parseInt(document.querySelector('tr[data-idx="'+idx+'"] .bMax').value)||10,
+    aSet:  parseSet(document.querySelector('tr[data-idx="'+idx+'"] .aSet').value),
+    bSet:  parseSet(document.querySelector('tr[data-idx="'+idx+'"] .bSet').value),
+  };
+}
+function rnd(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function waehlaWert(cfg){return cfg.aSet?rndFromSet(cfg.aSet):rnd(cfg.aMin,cfg.aMax);}
+function waehlbWert(cfg){return cfg.bSet?rndFromSet(cfg.bSet):rnd(cfg.bMin,cfg.bMax);}
+function berechne(op,a,b){
+  if(op==='+')return a+b;
+  if(op==='-')return a-b;
+  if(op==='x')return a*b;
+  if(op===':')return a/b;
+}
+
+// ── Toggle Einstellungen ──────────────────────────────────────────────────
+document.getElementById('toggle-config').addEventListener('change',function(){
+  ['config-panel','sprach-bar','lern-bar'].forEach(id=>{
+    document.getElementById(id).classList.toggle('hidden',!this.checked);
+  });
+});
+
+// ── Debug ─────────────────────────────────────────────────────────────────
+function dbg(msg,typ){
+  const panel=document.getElementById('debug-panel');
+  if(!panel.classList.contains('sichtbar'))return;
+  const t=new Date().toLocaleTimeString('de-DE');
+  const div=document.createElement('div');
+  div.className='dbg-line dbg-'+(typ||'info');
+  div.textContent='['+t+'] '+msg;
+  document.getElementById('debug-lines').appendChild(div);
+  panel.scrollTop=panel.scrollHeight;
+}
+
+document.getElementById('chk-debug').addEventListener('change',function(){
+  const panel=document.getElementById('debug-panel');
+  if(this.checked){
+    panel.classList.add('sichtbar');
+    document.getElementById('debug-lines').innerHTML='';
+    dbg('Debug-Modus aktiviert','info');
+    dbg('Browser: '+navigator.userAgent.substring(0,120),'info');
+    dbg('URL: '+location.href,'info');
+    dbg('Host: '+location.hostname+' Port: '+(location.port||'standard'),'info');
+    const istLokal=location.hostname==='localhost'||location.hostname==='127.0.0.1';
+    const protokollOk=location.protocol==='https:'||istLokal;
+    dbg('Protokoll: '+location.protocol+(protokollOk?' ✓':' ✗ Mikrofon braucht HTTPS oder localhost!'),protokollOk?'ok':'err');
+    dbg('SpeechSynthesis: '+('speechSynthesis' in window?'verfügbar ✓':'NICHT verfügbar ✗'),'speechSynthesis' in window?'ok':'err');
+    const hasSR=('SpeechRecognition' in window||'webkitSpeechRecognition' in window);
+    dbg('SpeechRecognition: '+(hasSR?'verfügbar ✓':'NICHT verfügbar ✗ (nur Chrome/Edge)'),hasSR?'ok':'err');
+    if(navigator.permissions){
+      navigator.permissions.query({name:'microphone'}).then(r=>{
+        dbg('Mikrofon-Erlaubnis: '+r.state,r.state==='granted'?'ok':r.state==='denied'?'err':'info');
+        if(r.state==='granted'&&!protokollOk) dbg('→ Erlaubnis vorhanden aber Protokoll blockiert Mikrofon!','err');
+        if(r.state==='denied') dbg('→ Erlaubnis verweigert: edge://settings/content/microphone','err');
+      }).catch(e=>dbg('Mikrofon-Erlaubnis-Abfrage: '+e.message,'err'));
+    } else dbg('Permissions API nicht verfügbar','info');
+  } else panel.classList.remove('sichtbar');
+});
+
+document.getElementById('btn-debug-copy').addEventListener('click',function(){
+  const text=Array.from(document.getElementById('debug-lines').querySelectorAll('.dbg-line'))
+                  .map(l=>l.textContent).join('\n');
+  if(!text){alert('Debug-Fenster ist leer.');return;}
+  const btn=this;
+  function ok(){btn.textContent='✓ Kopiert!';btn.style.color='#00ff99';setTimeout(()=>{btn.textContent='📋 Kopieren';btn.style.color='';},2500);}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(ok).catch(()=>kopiereAlt(text,ok));
+  } else kopiereAlt(text,ok);
+});
+function kopiereAlt(text,cb){
+  const ta=document.createElement('textarea');
+  ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand('copy');cb();}catch(e){alert('Bitte Strg+C drücken:\n'+text);}
+  document.body.removeChild(ta);
+}
+
+// ── Piepton bei falscher Antwort ──────────────────────────────────────────
+function piepFalsch(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    // Zwei kurze absteigende Töne
+    [[440,0,0.15],[330,0.18,0.15]].forEach(([freq,start,dur])=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.type='square';
+      osc.frequency.setValueAtTime(freq,ctx.currentTime+start);
+      gain.gain.setValueAtTime(0.18,ctx.currentTime+start);
+      gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+start+dur);
+      osc.start(ctx.currentTime+start);
+      osc.stop(ctx.currentTime+start+dur+0.01);
+    });
+    setTimeout(()=>ctx.close(),600);
+  } catch(e){ dbg('Audio-Fehler: '+e.message,'err'); }
+}
+
+// ── TTS ───────────────────────────────────────────────────────────────────
+function sprichAufgabe(text){
+  if(!document.getElementById('chk-tts').checked||!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  let t=text.trim()
+    .replace(/\s*\+\s*/g,' plus ')
+    .replace(/\s*-\s*/g,' minus ')
+    .replace(/\s*x\s*/g,' mal ')
+    .replace(/\s*:\s*/g,' geteilt durch ')
+    .replace(/\s*=\s*\?/g,' gleich wieviel?')
+    .replace(/\s*=\s*/g,' gleich ')
+    .replace(/\?/g,' wieviel ');
+  const u=new SpeechSynthesisUtterance(t);u.lang='de-DE';u.rate=0.92;
+  window.speechSynthesis.speak(u);
+}
+function sprichFeedback(richtig,antwort){
+  if(!document.getElementById('chk-tts').checked||!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const t=richtig?'Richtig!':'Leider falsch. Die richtige Antwort wäre '+antwort+' gewesen.';
+  const u=new SpeechSynthesisUtterance(t);u.lang='de-DE';u.rate=0.95;
+  window.speechSynthesis.speak(u);
+}
+
+// ── STT ───────────────────────────────────────────────────────────────────
+let erkennung=null,hoert=false;
+if('webkitSpeechRecognition' in window||'SpeechRecognition' in window){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  erkennung=new SR();erkennung.lang='de-DE';erkennung.continuous=false;erkennung.interimResults=false;
+  erkennung.onresult=function(e){    const tr=e.results[0][0].transcript.trim();
+    dbg('Gehört: "'+tr+'" ('+Math.round(e.results[0][0].confidence*100)+'%)','ok');
+    const zw={'null':0,'eins':1,'ein':1,'eine':1,'zwei':2,'drei':3,'vier':4,'fünf':5,'sechs':6,'sieben':7,'acht':8,'neun':9,'zehn':10,'elf':11,'zwölf':12,'dreizehn':13,'vierzehn':14,'fünfzehn':15,'sechzehn':16,'siebzehn':17,'achtzehn':18,'neunzehn':19,'zwanzig':20,'dreißig':30,'vierzig':40,'fünfzig':50,'sechzig':60,'siebzig':70,'achtzig':80,'neunzig':90,'hundert':100};
+    let val=parseFloat(tr.replace(',','.'));
+    if(isNaN(val)&&zw[tr.toLowerCase()]!==undefined)val=zw[tr.toLowerCase()];
+    const ein=document.getElementById('eingabe');
+    if(!isNaN(val)){ein.value=val;dbg('Zahl: '+val,'ok');ein.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));}
+    else{ein.value=tr;dbg('Keine Zahl erkannt','err');}
+    stopMic();
+  };
+  erkennung.onerror=function(e){
+    dbg('Fehler: '+e.error+(e.message?' – '+e.message:''),'err');
+    if(e.error==='not-allowed')dbg('→ Mikrofon-Erlaubnis verweigert','err');
+    if(e.error==='network')dbg('→ Netzwerkfehler','err');
+    if(e.error==='no-speech')dbg('→ Kein Ton erkannt','info');
+    stopMic();
+  };
+  erkennung.onstart=function(){dbg('Mikrofon aktiv ...','ok');};
+  erkennung.onend=function(){dbg('Mikrofon beendet','info');stopMic();};
+  erkennung.onnomatch=function(){dbg('Kein Treffer (onnomatch)','err');};
+  erkennung.onsoundstart=function(){dbg('Ton erkannt (onsoundstart) ✓','ok');};
+  erkennung.onsoundend=function(){dbg('Ton beendet (onsoundend)','info');};
+  erkennung.onspeechstart=function(){dbg('Sprache erkannt (onspeechstart) ✓','ok');};
+  erkennung.onspeechend=function(){dbg('Sprache beendet (onspeechend)','info');};
+  erkennung.onaudiostart=function(){dbg('Audio-Stream geöffnet (onaudiostart) ✓','ok');};
+  erkennung.onaudioend=function(){dbg('Audio-Stream geschlossen (onaudioend)','info');};
+}
+function startMic(){
+  if(!erkennung){dbg('SpeechRecognition nicht verfügbar','err');return;}
+  const ein=document.getElementById('eingabe');
+  if(ein.disabled){dbg('Erst Training starten','err');return;}
+  // Mikrofon-Zugang testen bevor SpeechRecognition startet
+  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+      stream.getTracks().forEach(t=>t.stop()); // sofort wieder freigeben
+      dbg('getUserMedia: Mikrofon-Zugang OK ✓','ok');
+      _startSR();
+    }).catch(err=>{
+      dbg('getUserMedia Fehler: '+err.name+' – '+err.message,'err');
+      if(err.name==='NotAllowedError') dbg('→ Erlaubnis verweigert. Browser-Einstellungen prüfen.','err');
+      if(err.name==='NotFoundError')  dbg('→ Kein Mikrofon gefunden.','err');
+    });
+  } else {
+    dbg('mediaDevices.getUserMedia nicht verfügbar – starte SR direkt','info');
+    _startSR();
+  }
+}
+function _startSR(){
+  try{hoert=true;document.getElementById('btn-mic').classList.add('hoert');dbg('Starte SpeechRecognition ...','info');erkennung.start();}
+  catch(e){dbg('SR Start-Fehler: '+e.message,'err');stopMic();}
+}
+function stopMic(){hoert=false;document.getElementById('btn-mic').classList.remove('hoert');}
+document.getElementById('btn-mic').addEventListener('mousedown',function(e){
+  e.preventDefault(); // verhindert Copilot/Kontextmenü
+  if(hoert){erkennung&&erkennung.stop();stopMic();}
+  else{
+    // Kurze Verzögerung damit TTS-Aufgabe fertig ist bevor Mikrofon lauscht
+    dbg('Mikrofon startet in 800ms ...','info');
+    setTimeout(startMic, 800);
+  }
+});
+// Touch-Support für mobile Geräte
+document.getElementById('btn-mic').addEventListener('touchstart',function(e){
+  e.preventDefault();
+  if(hoert){erkennung&&erkennung.stop();stopMic();}
+  else{ setTimeout(startMic, 800); }
+},{passive:false});
+document.getElementById('chk-stt').addEventListener('change',function(){
+  const btn=document.getElementById('btn-mic');
+  if(this.checked)btn.classList.add('sichtbar');
+  else{btn.classList.remove('sichtbar');if(hoert){erkennung&&erkennung.stop();stopMic();}}
+});
+
+// ── Spaced Repetition: gewichtete Auswahl ────────────────────────────────
+function waehleTypIndex(aktive){
+  if(!document.getElementById('chk-spaced').checked){
+    return aktive[Math.floor(Math.random()*aktive.length)];
+  }
+  // gewichtete Zufallsauswahl
+  const gewSumme=aktive.reduce((s,i)=>s+srGewichte[i],0);
+  let r=Math.random()*gewSumme;
+  for(const i of aktive){r-=srGewichte[i];if(r<=0)return i;}
+  return aktive[aktive.length-1];
+}
+function aktualisiereGewicht(idx,richtig){
+  if(!document.getElementById('chk-spaced').checked)return;
+  if(richtig){srGewichte[idx]=Math.max(0.2,srGewichte[idx]*0.7);}
+  else{srGewichte[idx]=Math.min(5,srGewichte[idx]*1.8);}
+}
+
+// ── Fehlerkatalog ─────────────────────────────────────────────────────────
+function fkHinzufuegen(key,aufgabe,antwort,falscheEingabe){
+  if(!document.getElementById('chk-fk').checked)return;
+  if(!fehlerkatalog[key]){
+    fehlerkatalog[key]={aufgabe,antwort,versuche:1,richtigInFolge:0,offen:true,falscheEingaben:[falscheEingabe]};
+  } else {
+    fehlerkatalog[key].versuche++;
+    fehlerkatalog[key].offen=true;
+    fehlerkatalog[key].richtigInFolge=0;
+    // Falsche Eingabe merken (max. 5, keine Duplikate)
+    if(!fehlerkatalog[key].falscheEingaben) fehlerkatalog[key].falscheEingaben=[];
+    if(!fehlerkatalog[key].falscheEingaben.includes(falscheEingabe)){
+      fehlerkatalog[key].falscheEingaben.unshift(falscheEingabe);
+      if(fehlerkatalog[key].falscheEingaben.length>5) fehlerkatalog[key].falscheEingaben.pop();
+    }
+  }
+  const delay=rnd(3,5);
+  fkQueue.push({key,delay,counter:0});
+}
+function fkRichtigBeantwortet(key){
+  if(fehlerkatalog[key]){
+    fehlerkatalog[key].richtigInFolge=(fehlerkatalog[key].richtigInFolge||0)+1;
+    if(fehlerkatalog[key].richtigInFolge>=2)fehlerkatalog[key].offen=false;
+  }
+  fkQueue=fkQueue.filter(q=>q.key!==key);
+}
+function fkNaechste(){
+  if(!document.getElementById('chk-fk').checked||fkQueue.length===0)return null;
+  for(const q of fkQueue){
+    q.counter++;
+    if(q.counter>=q.delay){
+      const eintrag=fehlerkatalog[q.key];
+      if(eintrag&&eintrag.offen)return eintrag;
+    }
+  }
+  return null;
+}
+
+// ── Aufgaben-Statistik ────────────────────────────────────────────────────
+function statsErfassen(key,aufgabe,richtig){
+  if(!aufgabenStats[key])aufgabenStats[key]={aufgabe,richtig:0,falsch:0};
+  if(richtig)aufgabenStats[key].richtig++;
+  else aufgabenStats[key].falsch++;
+}
+
+// ── Aufgabe generieren ────────────────────────────────────────────────────
+let laufendeAufgabeIstFK=false;
+
+function generiereAufgabe(){
+  try {
+  const aktive=[];
+  for(let i=0;i<TYPEN.length;i++)if(getConfig(i).aktiv)aktive.push(i);
+  if(aktive.length===0){
+    document.getElementById('ausgabe').textContent=pad80('Bitte einen Aufgabentyp aktivieren!');return;
+  }
+
+  // Fehlerkatalog-Aufgabe fällig?
+  const fkAufgabe=fkNaechste();
+  dbg('generiereAufgabe: FK='+(fkAufgabe?fkAufgabe.aufgabe:'nein')+' aktive='+aktive.length,'info');
+  if(fkAufgabe){
+    laufendeAufgabeIstFK=true;
+    aktuelleAufgabe=fkAufgabe.aufgabe;
+    aktuelleAntwort=fkAufgabe.antwort;
+    aktuelleKey=Object.keys(fehlerkatalog).find(k=>fehlerkatalog[k]===fkAufgabe)||'';
+    document.getElementById('ausgabe').textContent=pad80('⟳ '+fkAufgabe.aufgabe);
+    sprichAufgabe(fkAufgabe.aufgabe);
+  } else {
+    laufendeAufgabeIstFK=false;
+    const idx=waehleTypIndex(aktive);
+    const typ=TYPEN[idx];
+    const cfg=getConfig(idx);
+    let a,b,c;
+
+    if(typ.op===':'){
+      // Division: b aus Set oder Bereich, c aus Set/Bereich, a = b*c (ganzzahlig)
+      b = waehlbWert(cfg);
+      // c-Bereich: aMin/aMax dient als Bereich für das Ergebnis (wenn kein aSet)
+      const cMin = cfg.aSet ? 1 : Math.max(1, Math.ceil(cfg.aMin/b));
+      const cMax = cfg.aSet ? 99 : Math.max(cMin, Math.floor(cfg.aMax/b));
+      c = cfg.aSet ? rndFromSet(cfg.aSet) : rnd(cMin, cMax);
+      a = b * c;
+    } else if(typ.op==='-'){
+      // Subtraktion: a >= b sicherstellen, Ergebnis immer >= 0
+      a = waehlaWert(cfg);
+      b = waehlbWert(cfg);
+      if(b > a){ const tmp=a; a=b; b=tmp; }
+      c = a - b;
+    } else {
+      a = waehlaWert(cfg);
+      b = waehlbWert(cfg);
+      c = berechne(typ.op,a,b);
+    }
+    let aufgabe,antwort;
+    if(typ.frage==='c'){aufgabe=a+'  '+typ.op+'  '+b+'  =  ?';antwort=c;}
+    else if(typ.frage==='b'){aufgabe=a+'  '+typ.op+'  ?  =  '+c;antwort=b;}
+    else{aufgabe='?  '+typ.op+'  '+b+'  =  '+c;antwort=a;}
+    aktuelleAufgabe=aufgabe.trim();
+    aktuelleAntwort=antwort;
+    aktuelleKey=idx+'|'+aufgabe.trim();
+    document.getElementById('ausgabe').textContent=pad80(aufgabe);
+    sprichAufgabe(aufgabe);
+    dbg('Aufgabe: '+aufgabe.trim()+' Key: '+aktuelleKey,'ok');
+    document.getElementById('ausgabe').dataset.typIdx=idx;
+  }
+
+  const ein=document.getElementById('eingabe');
+  ein.disabled=false; ein.value='';
+  // Nur auf Desktop automatisch fokussieren — auf Mobilgeräten
+  // würde focus() die virtuelle Tastatur öffnen und schliessen
+  const istMobil = /Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
+  if(!istMobil) ein.focus();
+  document.getElementById('feedback').textContent='';
+  document.getElementById('feedback').className='';
+  } catch(err){
+    dbg('FEHLER in generiereAufgabe: '+err.message,'err');
+    dbg(err.stack?err.stack.substring(0,200):'(kein Stack)','err');
+    // Trotzdem Eingabe aktivieren damit Training weitergehen kann
+    document.getElementById('ausgabe').textContent=pad80('Fehler – bitte neu starten');
+  }
+}
+
+// ── Auswertung ────────────────────────────────────────────────────────────
+document.getElementById('eingabe').addEventListener('keydown',function(e){
+  if(e.key!=='Enter')return;
+  const val=parseFloat(this.value.replace(',','.'));
+  if(isNaN(val))return;
+
+  const now=new Date();
+  const richtig=Math.abs(val-aktuelleAntwort)<0.001;
+  const name=document.getElementById('schueler-name').value.trim()||'–';
+  const typIdx=parseInt(document.getElementById('ausgabe').dataset.typIdx)||0;
+
+  protokoll.push({datum:now.toLocaleDateString('de-DE'),uhrzeit:now.toLocaleTimeString('de-DE'),name,aufgabe:aktuelleAufgabe,erwartet:aktuelleAntwort,eingabe:val,richtig});
+  statsErfassen(aktuelleKey,aktuelleAufgabe,richtig);
+
+  if(!laufendeAufgabeIstFK){
+    aktualisiereGewicht(typIdx,richtig);
+    if(!richtig)fkHinzufuegen(aktuelleKey,aktuelleAufgabe,aktuelleAntwort,val);
+  } else {
+    if(richtig)fkRichtigBeantwortet(aktuelleKey);
+    else if(fehlerkatalog[aktuelleKey]){fehlerkatalog[aktuelleKey].versuche++;fehlerkatalog[aktuelleKey].richtigInFolge=0;}
+  }
+
+  const fb=document.getElementById('feedback');
+  if(richtig){
+    statR++;fb.textContent='✓  Richtig!';fb.className='richtig';
+    sprichFeedback(true,aktuelleAntwort);
+  } else {
+    statF++;fb.textContent='✗  Falsch!   Richtig: '+aktuelleAntwort;fb.className='falsch';
+    piepFalsch();
+    sprichFeedback(false,aktuelleAntwort);
+  }
+
+  document.getElementById('stat-r').textContent=statR;
+  document.getElementById('stat-f').textContent=statF;
+  document.getElementById('stat-g').textContent=statR+statF;
+  document.getElementById('stats').classList.remove('hidden');
+  this.disabled=true;
+  dbg('Antwort: '+val+' erwartet: '+aktuelleAntwort+' richtig: '+richtig,'info');
+  // Falsch → schneller weiter (800ms), Richtig → kurze Pause (1500ms)
+  setTimeout(()=>{dbg('Starte nächste Aufgabe ...','info');generiereAufgabe();}, richtig?1500:800);
+});
+
+// ── Start ─────────────────────────────────────────────────────────────────
+document.getElementById('btn-start').addEventListener('click',function(){
+  statR=0;statF=0;
+  document.getElementById('stat-r').textContent='0';
+  document.getElementById('stat-f').textContent='0';
+  document.getElementById('stat-g').textContent='0';
+  document.getElementById('stats').classList.add('hidden');
+  generiereAufgabe();
+});
+
+// ── Dateiname-Hilfsfunktion ───────────────────────────────────────────────
+function schuelerDateiname(){
+  return (document.getElementById('schueler-name').value.trim()||'schueler')
+         .toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_äöüß]/g,'');
+}
+
+// ── Konfiguration speichern ───────────────────────────────────────────────
+document.getElementById('btn-speichern').addEventListener('click',function(){
+  const name=document.getElementById('schueler-name').value.trim()||'Schüler';
+  const aufgaben=[];for(let i=0;i<TYPEN.length;i++){
+    const cfg=getConfig(i);
+    cfg.aSetRaw=document.querySelector('tr[data-idx="'+i+'"] .aSet').value;
+    cfg.bSetRaw=document.querySelector('tr[data-idx="'+i+'"] .bSet').value;
+    aufgaben.push(cfg);
+  }
+  const daten={
+    name,
+    gespeichertAm: new Date().toLocaleString('de-DE'),
+    version: 2,
+    // Konfiguration
+    aufgaben,
+    lernoptionen: {
+      spacedRepetition: document.getElementById('chk-spaced').checked,
+      fehlerkatalogAktiv: document.getElementById('chk-fk').checked,
+    },
+    // Lernstand
+    srGewichte,
+    fehlerkatalog,
+    fkQueue,
+    aufgabenStats,
+    // Session-Statistik
+    sessionStats: { richtig: statR, falsch: statF },
+  };
+  const blob=new Blob([JSON.stringify(daten,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='RK-Conf-'+schuelerDateiname()+'.json';a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ── Konfiguration laden ───────────────────────────────────────────────────
+document.getElementById('btn-laden').addEventListener('click',()=>document.getElementById('laden-input').click());
+document.getElementById('laden-input').addEventListener('change',function(){
+  const datei=this.files[0];if(!datei)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const d=JSON.parse(e.target.result);
+
+      // Name
+      if(d.name)document.getElementById('schueler-name').value=d.name;
+
+      // Aufgabentypen & Zahlenbereiche
+      if(Array.isArray(d.aufgaben)){
+        d.aufgaben.forEach((cfg,i)=>{
+          const chk=document.querySelector('.chk[data-idx="'+i+'"]');
+          const row=document.querySelector('tr[data-idx="'+i+'"]');
+          if(!chk||!row)return;
+          chk.checked=!!cfg.aktiv;
+          row.querySelector('.aMin').value=cfg.aMin;
+          row.querySelector('.aMax').value=cfg.aMax;
+          row.querySelector('.bMin').value=cfg.bMin;
+          row.querySelector('.bMax').value=cfg.bMax;
+          if(cfg.aSetRaw!==undefined)row.querySelector('.aSet').value=cfg.aSetRaw;
+          if(cfg.bSetRaw!==undefined)row.querySelector('.bSet').value=cfg.bSetRaw;
+        });
+      }
+
+      // Lernoptionen
+      if(d.lernoptionen){
+        document.getElementById('chk-spaced').checked=!!d.lernoptionen.spacedRepetition;
+        document.getElementById('chk-fk').checked=!!d.lernoptionen.fehlerkatalogAktiv;
+      }
+
+      // Lernstand vollständig wiederherstellen
+      if(d.srGewichte && d.srGewichte.length===TYPEN.length) srGewichte=d.srGewichte;
+      else srGewichte=TYPEN.map(()=>1);
+      if(d.fehlerkatalog) fehlerkatalog=d.fehlerkatalog;
+      if(d.fkQueue)       fkQueue=d.fkQueue;
+      if(d.aufgabenStats) aufgabenStats=d.aufgabenStats;
+
+      // Dashboard-Statistik zurücksetzen (neue Session)
+      statR=0; statF=0;
+      document.getElementById('stat-r').textContent='0';
+      document.getElementById('stat-f').textContent='0';
+      document.getElementById('stat-g').textContent='0';
+      document.getElementById('stats').classList.add('hidden');
+
+      // Infomeldung mit Lernstand-Zusammenfassung
+      const fkOffen=Object.values(fehlerkatalog).filter(v=>v.offen).length;
+      const gesAufgaben=Object.values(aufgabenStats).reduce((s,v)=>s+v.richtig+v.falsch,0);
+      const msg='Geladen: '+(d.name||'')
+        +(d.gespeichertAm?' · '+d.gespeichertAm:'')
+        +' · '+gesAufgaben+' Aufgaben bisher'
+        +(fkOffen>0?' · '+fkOffen+' FK offen':'');
+      document.getElementById('ausgabe').textContent=pad80(msg);
+
+    } catch(err){alert('Fehler beim Laden der Datei: '+err.message);}
+  };
+  reader.readAsText(datei);this.value='';
+});
+
+// ── Ergebnisse (aktuelle Session) ────────────────────────────────────────
+document.getElementById('btn-result').addEventListener('click',function(){
+  const tb=document.getElementById('result-tbody');tb.innerHTML='';
+  protokoll.forEach(p=>{
+    const tr=document.createElement('tr');tr.className=p.richtig?'richtig':'falsch';
+    tr.innerHTML='<td>'+p.datum+'</td><td>'+p.uhrzeit+'</td><td>'+p.name+'</td><td>'+p.aufgabe+'</td><td>'+p.erwartet+'</td><td>'+p.eingabe+'</td><td>'+(p.richtig?'JA':'NEIN')+'</td>';
+    tb.appendChild(tr);
+  });
+  const ges=protokoll.length,r=protokoll.filter(p=>p.richtig).length;
+  document.getElementById('result-summary').textContent=ges>0?'Gesamt: '+ges+'  |  Richtig: '+r+'  |  Falsch: '+(ges-r):'Noch keine Aufgaben in dieser Session.';
+  document.getElementById('result-overlay').classList.add('aktiv');
+});
+document.getElementById('btn-result-close').addEventListener('click',()=>document.getElementById('result-overlay').classList.remove('aktiv'));
+document.getElementById('result-overlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('aktiv');});
+
+// ── Log speichern (sessionsübergreifend) ──────────────────────────────────
+const CSV_HEADER='Datum;Uhrzeit;Schueler;Aufgabe;Erwartet;Eingabe;Richtig';
+
+function neueZeilen(){
+  return protokoll.map(p=>[p.datum,p.uhrzeit,p.name,p.aufgabe,p.erwartet,p.eingabe,p.richtig?'JA':'NEIN'].join(';')).join('\n');
+}
+
+document.getElementById('btn-log-speichern').addEventListener('click',function(){
+  if(protokoll.length===0){alert('Keine neuen Aufgaben in dieser Session.');return;}
+  // Zuerst fragen ob bestehende Log-Datei geladen werden soll
+  const laden=confirm(
+    'Soll eine bestehende Log-Datei (RK-Log-'+schuelerDateiname()+'.csv) geladen\n'+
+    'und die neuen Einträge angehängt werden?\n\n'+
+    '→ OK = bestehende Datei laden und anhängen\n'+
+    '→ Abbrechen = nur neue Session speichern'
+  );
+  if(laden){
+    document.getElementById('log-laden-input').click();
+  } else {
+    speichereLog(CSV_HEADER+'\n'+neueZeilen());
+  }
+});
+
+document.getElementById('log-laden-input').addEventListener('change',function(){
+  const datei=this.files[0];if(!datei)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    let bestehend=e.target.result.replace(/^\uFEFF/,'').trim(); // BOM entfernen
+    // Sicherstellen dass Header vorhanden
+    if(!bestehend.startsWith('Datum')){bestehend=CSV_HEADER+'\n'+bestehend;}
+    const neu=neueZeilen();
+    speichereLog(bestehend+'\n'+neu);
+  };
+  reader.readAsText(datei,'utf-8');this.value='';
+});
+
+function speichereLog(inhalt){
+  const blob=new Blob(['\uFEFF'+inhalt],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='RK-Log-'+schuelerDateiname()+'.csv';a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── CSV Download aus Ergebnisfenster (aktuelle Session) ──────────────────
+document.getElementById('btn-csv').addEventListener('click',function(){
+  if(protokoll.length===0){alert('Noch keine Aufgaben gelöst.');return;}
+  speichereLog(CSV_HEADER+'\n'+neueZeilen());
+});
+
+// ── Dashboard ─────────────────────────────────────────────────────────────
+document.getElementById('btn-dashboard').addEventListener('click',function(){
+  bauedasboard();
+  document.getElementById('dash-overlay').classList.add('aktiv');
+});
+document.getElementById('btn-dash-close').addEventListener('click',()=>document.getElementById('dash-overlay').classList.remove('aktiv'));
+document.getElementById('dash-overlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('aktiv');});
+
+function bauedasboard(){
+  const body=document.getElementById('dash-body');
+  body.innerHTML='';
+
+  // ── 1. Fortschrittsbalken pro Aufgabentyp ──
+  const progSec=document.createElement('div');progSec.className='dash-section';
+  progSec.innerHTML='<div class="dash-title">Fortschritt pro Aufgabentyp</div>';
+  TYPEN.forEach((typ,i)=>{
+    let r=0,f=0;
+    const prefix=i+'|';
+    Object.entries(aufgabenStats).forEach(([key,st])=>{
+      if(key.startsWith(prefix)){ r+=st.richtig; f+=st.falsch; }
+    });
+    const ges=r+f;
+    const cfg=getConfig(i);
+    const aWerte=cfg.aSet?cfg.aSet:Array.from({length:Math.min(cfg.aMax-cfg.aMin+1,20)},(_,j)=>cfg.aMin+j);
+    const bWerte=cfg.bSet?cfg.bSet:Array.from({length:Math.min(cfg.bMax-cfg.bMin+1,20)},(_,j)=>cfg.bMin+j);
+    const total=aWerte.length*bWerte.length;
+    const abgedeckt=Object.keys(aufgabenStats).filter(k=>k.startsWith(i+'|')).length;
+    const pct=total>0?Math.min(100,Math.round(abgedeckt/total*100)):0;
+    const quote=ges>0?Math.round(r/ges*100):0;
+    const farbe=quote>=80?'#00ff99':quote>=50?'#ffd166':'#ff4466';
+    const gewLabel=document.getElementById('chk-spaced').checked?(' · Gewicht: '+srGewichte[i].toFixed(1)):'';
+    const row=document.createElement('div');row.className='prog-row';
+    row.innerHTML=
+      '<div class="prog-label">'+typ.label+'</div>'+
+      '<div class="prog-track"><div class="prog-fill" style="width:'+pct+'%;background:'+farbe+'"></div></div>'+
+      '<div class="prog-pct">'+pct+'%</div>'+
+      '<div class="prog-cnt">'+abgedeckt+'/'+total+' · '+quote+'% richtig'+gewLabel+'</div>';
+    progSec.appendChild(row);
+  });
+  body.appendChild(progSec);
+
+  // ── 2. Heatmaps ──
+  const hmSec=document.createElement('div');hmSec.className='dash-section';
+  hmSec.innerHTML='<div class="dash-title">Aufgaben-Heatmap</div>';
+
+  const leg=document.createElement('div');leg.className='hm-legend';
+  leg.innerHTML=
+    '<span><span class="hm-dot" style="background:#2a3550"></span>Noch nie</span>'+
+    '<span><span class="hm-dot" style="background:#00994d"></span>Richtig</span>'+
+    '<span><span class="hm-dot" style="background:#cc2244"></span>Falsch</span>'+
+    '<span><span class="hm-dot" style="background:#aa7700"></span>Gemischt</span>';
+  hmSec.appendChild(leg);
+
+  TYPEN.forEach((typ,idx)=>{
+    const cfg=getConfig(idx);
+    if(!cfg.aktiv)return;
+
+    const aWerte=cfg.aSet?cfg.aSet:Array.from({length:Math.min(cfg.aMax-cfg.aMin+1,20)},(_,i)=>cfg.aMin+i);
+    const bWerte=cfg.bSet?cfg.bSet:Array.from({length:Math.min(cfg.bMax-cfg.bMin+1,20)},(_,i)=>cfg.bMin+i);
+    const aLabel=cfg.aSet?'Set: '+cfg.aSet.join(','):cfg.aMin+'-'+cfg.aMax;
+    const bLabel=cfg.bSet?'Set: '+cfg.bSet.join(','):cfg.bMin+'-'+cfg.bMax;
+
+    const wrap=document.createElement('div');wrap.className='heatmap-wrap';
+    wrap.innerHTML='<div class="heatmap-title">'+typ.label+' a: '+aLabel+' b: '+bLabel+'</div>';
+
+    // b-Kopfzeile
+    const hdr=document.createElement('div');
+    hdr.style.cssText='display:flex;gap:3px;margin-bottom:2px;margin-left:28px;';
+    bWerte.forEach(bv=>{
+      const l=document.createElement('div');
+      l.style.cssText='width:22px;text-align:center;font-size:.5rem;color:var(--muted);';
+      l.textContent=bv;hdr.appendChild(l);
+    });
+    wrap.appendChild(hdr);
+
+    // Zeilen
+    aWerte.forEach(av=>{
+      const rowDiv=document.createElement('div');
+      rowDiv.style.cssText='display:flex;gap:3px;align-items:center;margin-bottom:3px;';
+      const aLbl=document.createElement('div');
+      aLbl.style.cssText='width:24px;text-align:right;font-size:.5rem;color:var(--muted);flex-shrink:0;';
+      aLbl.textContent=av;rowDiv.appendChild(aLbl);
+
+      bWerte.forEach(bv=>{
+        // Werte exakt wie in generiereAufgabe berechnen
+        let cellA=av, cellB=bv, cellC;
+        if(typ.op===':'){
+          // b-Achse=Divisor, a-Achse=Ergebnis c; echtes a = b*c
+          cellB=bv; cellC=av; cellA=bv*av;
+          if(cellA===0){ rowDiv.appendChild(document.createElement('div')); return; }
+        } else if(typ.op==='-'){
+          // Tausch wie in generiereAufgabe
+          cellA=av; cellB=bv;
+          if(cellB>cellA){ const t=cellA; cellA=cellB; cellB=t; }
+          cellC=cellA-cellB;
+        } else {
+          cellC=berechne(typ.op,cellA,cellB);
+        }
+
+        // Aufgabentext EXAKT wie in generiereAufgabe (doppelte Leerzeichen)
+        let txt;
+        if(typ.frage==='c')      txt=cellA+'  '+typ.op+'  '+cellB+'  =  ?';
+        else if(typ.frage==='b') txt=cellA+'  '+typ.op+'  ?  =  '+cellC;
+        else                     txt='?  '+typ.op+'  '+cellB+'  =  '+cellC;
+
+        // Key EXAKT wie in statsErfassen: idx+':'+aufgabe.trim()
+        const key=idx+'|'+txt.trim();
+        const st=aufgabenStats[key];
+
+        let cls='hm-neu';
+        let tip=txt.trim()+' = '+cellC;
+        if(st){
+          if(st.richtig>0&&st.falsch===0){cls='hm-richtig';tip+=' ('+st.richtig+'x richtig)';}
+          else if(st.falsch>0&&st.richtig===0){cls='hm-falsch';tip+=' ('+st.falsch+'x falsch)';}
+          else{cls='hm-offen';tip+=' ('+st.richtig+'x richtig, '+st.falsch+'x falsch)';}
+        }
+        const cell=document.createElement('div');
+        cell.className='hm-cell '+cls;
+        cell.title=tip;
+        cell.textContent=cellC;
+        rowDiv.appendChild(cell);
+      });
+      wrap.appendChild(rowDiv);
+    });
+    hmSec.appendChild(wrap);
+  });
+  body.appendChild(hmSec);
+
+  // ── 3. Fehlerkatalog ──
+  const fkSec=document.createElement('div');fkSec.className='dash-section';
+  fkSec.innerHTML='<div class="dash-title">Fehlerkatalog</div>';
+  const fkDiv=document.createElement('div');fkDiv.className='fk-list';
+  const offene=Object.entries(fehlerkatalog).filter(([,v])=>v.offen);
+  const geschlossene=Object.entries(fehlerkatalog).filter(([,v])=>!v.offen);
+  if(offene.length===0&&geschlossene.length===0){
+    fkDiv.innerHTML='<div class="fk-empty">Noch keine Fehler erfasst.</div>';
+  } else {
+    if(offene.length>0){
+      const h=document.createElement('div');h.style.cssText='font-size:.65rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;';h.textContent='Noch offen ('+offene.length+')';fkDiv.appendChild(h);
+      offene.forEach(([,v])=>{
+        const falsch=v.falscheEingaben&&v.falscheEingaben.length>0
+          ? ' / '+v.falscheEingaben.join(', ') : '';
+        const it=document.createElement('div');it.className='fk-item';
+        it.innerHTML=
+          '<div class="fk-aufgabe">'+v.aufgabe+
+          '<span style="color:#ffd166;margin-left:8px;">'+falsch+'</span></div>'+
+          '<div class="fk-zaehler">'+v.versuche+'× versucht · '+(v.richtigInFolge||0)+'× richtig in Folge</div>';
+        fkDiv.appendChild(it);
+      });
+    }
+    if(geschlossene.length>0){
+      const h=document.createElement('div');h.style.cssText='font-size:.65rem;color:#00994d;letter-spacing:.1em;text-transform:uppercase;margin:10px 0 6px;';h.textContent='Gemeistert ('+geschlossene.length+')';fkDiv.appendChild(h);
+      geschlossene.forEach(([,v])=>{
+        const falsch=v.falscheEingaben&&v.falscheEingaben.length>0
+          ? ' / '+v.falscheEingaben.join(', ') : '';
+        const it=document.createElement('div');it.className='fk-item';
+        it.style.opacity='.6';
+        it.innerHTML=
+          '<div class="fk-aufgabe" style="color:#00994d">✓ '+v.aufgabe+
+          '<span style="color:#ffd16699;margin-left:8px;">'+falsch+'</span></div>'+
+          '<div class="fk-zaehler">'+v.versuche+'× versucht</div>';
+        fkDiv.appendChild(it);
+      });
+    }
+  }
+  fkSec.appendChild(fkDiv);
+  body.appendChild(fkSec);
+}
+</script>
+</body>
+</html>
